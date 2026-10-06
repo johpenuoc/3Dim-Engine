@@ -1,0 +1,3 @@
+WINDOWSIZE = (16 * 35, 9 * 35)
+DISPLAYSIZE = (16 * 20, 9 * 20)
+FPS_CAP = 60
