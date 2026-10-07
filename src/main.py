@@ -11,7 +11,7 @@ if parent_dir not in sys.path:
 
 # import config files
 from config.mst import *
-from engine.render import *
+import engine.render as render
 
 class Main:
     def __init__(self):
@@ -20,7 +20,9 @@ class Main:
         self.clock = pygame.time.Clock()
         self.dt = 0
 
-        self.render = Renderer(self)
+        self.cube = render.Cube(
+            self, (0, 0, 20), (20, 20, 20), 0
+        )
 
     def run(self):
         while 1:
@@ -33,7 +35,7 @@ class Main:
 
             self.dis.fill((0, 0, 0))
 
-            self.render.draw_square()
+            self.cube.draw()
 
             self.win.blit(
                 pygame.transform.scale(self.dis, WINDOWSIZE), (0, 0)
