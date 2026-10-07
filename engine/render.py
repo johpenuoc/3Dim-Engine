@@ -126,10 +126,10 @@ class Sphere(Renderer):
         theta2 = 0
 
         # generate first half first
-        inc = 90 / RES
-        _inc = 360 / RES
+        inc = 90 / SPHERE_RES
+        _inc = 360 / inc
         for i in range(int(inc)):
-            for j in range(int(_inc)):
+            for j in range(int(inc)):
                 theta1 += _inc
 
                 l = rad * cos(radians(theta2))
@@ -145,16 +145,14 @@ class Sphere(Renderer):
 
                 points.append([x, y, z, [x, y, z]])
 
-            theta2 += inc
+            theta2 += SPHERE_RES
             theta1 = 0
 
         # generate second half next
-        inc = 90 / RES
-        _inc = 360 / RES
         theta1 = 0
         theta2 = 0
         for i in range(int(inc)):
-            for j in range(int(_inc)):
+            for j in range(int(inc)):
                 theta1 += _inc
 
                 l = rad * cos(radians(theta2))
@@ -170,7 +168,7 @@ class Sphere(Renderer):
 
                 points.append([x, y, z, [x, y, z]])
 
-            theta2 -= inc
+            theta2 -= SPHERE_RES
             theta1 = 0
 
         self.obj = [
