@@ -38,6 +38,7 @@ class Renderer:
     def draw(self):
         #self.fov += .2 * self.main.dt
         self.obj[1] += (50 * self.main.dt) % 360
+        #self.fov += 2 * self.main.dt
         points = self.obj[0]
         centre = self.obj[2]
         points_index = self.obj[3]
@@ -54,16 +55,17 @@ class Renderer:
             x, y = self.translate_coord(x, y)
 
             self.point(x, y, 2)
-            points[id][3] = (x, y)
+            points[id][-1] = (x, y)
 
-            # connecting each dot to actually draw the object
-            point = (x, y)
-            p_id = (id + 1) * 3
+        # connecting each dot to actually draw the object
+        for id, p_id in enumerate(points_index):
+            if (id + 1) % 3 == 0:
+                i1 = points_index[id - 1]
+                i2 = points_index[id - 2]
 
-            i = points_index[p_id - 3]
-            self.connect(points[i][-1], points[i + 1][-1])
-            self.connect(points[i + 1][-1], point)
-            self.connect(point, points[i][-1])
+                self.connect(points[p_id][-1], points[i1][-1])
+                self.connect(points[i1][-1], points[i2][-1])
+                self.connect(points[i2][-1], points[p_id][-1])
 
 class Cube(Renderer):
     def __init__(self, Main, centre, dim, theta):
@@ -80,17 +82,31 @@ class Cube(Renderer):
         points = [[*i, i] for i in points]
 
         points_index = [
-            0, 1, 2,  
-            1, 2, 3,
 
-            0, 4, 5,
+            # back
+            0, 1, 2,
+            3, 2, 1,
+
+            # top
+            0, 2, 6,
+            6, 4, 0,
+
+            # front
+            4, 5, 7,
+            7, 6, 4,
+
+            # bottom
+            1, 3, 7,
+            7, 5, 1,
+
+            # left
             0, 1, 5,
+            5, 4, 0,
 
-            2, 6, 7,
-            3, 7, 6,
+            # right
+            2, 3, 7,
+            7, 6, 2
 
-            4, 5, 6,
-            5, 6, 7
         ]
 
         self.obj = [
