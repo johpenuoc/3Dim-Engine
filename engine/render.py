@@ -38,7 +38,7 @@ class Renderer:
     def draw(self):
         #self.fov += .2 * self.main.dt
         self.obj[1] += (50 * self.main.dt) % 360
-        self.fov += 5 * self.main.dt
+        self.fov += 3.5 * self.main.dt
         points = self.obj[0]
         centre = self.obj[2]
         points_index = self.obj[3]
@@ -127,16 +127,21 @@ class Sphere(Renderer):
 
         # generate top half first
         inc = 90 / RES
+        _inc = 360 / RES
         for i in range(int(inc)):
-            _inc = 360 / RES
             for j in range(int(_inc)):
                 theta1 += _inc
 
-                x = rad * cos(theta1)
-                z = rad * sin(theta1)
+                l = rad * cos(radians(theta2))
+                x = l * sin(radians(theta1))
+                y = l * cos(radians(theta1))
+                z = l * tan(radians(theta2))
+
+                '''x = rad * cos(radians(theta1))
+                z = rad * sin(radians(theta1))
 
                 l = sqrt(x**2 + z**2)
-                y = l * tan(theta2)
+                y = l * tan(radians(theta2))'''
 
                 points.append([x, y, z, [x, y, z]])
 
