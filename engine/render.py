@@ -1,6 +1,6 @@
 import pygame
 import sys
-from math import cos, sin, radians
+from math import cos, sin, sqrt, radians
 
 # ensure parent folder is in the search path
 from pathlib import Path
@@ -9,8 +9,8 @@ parent_dir = str(Path(__file__).resolve().parent.parent)
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 
-from config.mst import *
-
+from config.mst import *        
+    
 class Renderer:
     def __init__(self, Main):
         self.main = Main
@@ -32,16 +32,18 @@ class Renderer:
 
         return _x, _z
 
-    def wire(self, p1, p2):
-        pass
+    def connect(self, p1, p2):
+        pygame.draw.line(self.main.dis, (255, 255, 255), (p1[0], p1[1]), (p2[0], p2[1]))
 
     def draw(self):
         #self.fov += .2 * self.main.dt
-        self.cube[1] += (50 * self.main.dt) % 360
-        points = self.cube[0]
-        centre = self.cube[2]
-        for p in points:
-            x, z = self.rotate(p[0], p[2], self.cube[1])
+        self.obj[1] += (50 * self.main.dt) % 360
+        points = self.obj[0]
+        centre = self.obj[2]
+        points_index = self.obj[3]
+
+        for id, p in enumerate(points):
+            x, z = self.rotate(p[0], p[2], self.obj[1])
             y = p[1]
             
             x += centre[0]
@@ -52,6 +54,16 @@ class Renderer:
             x, y = self.translate_coord(x, y)
 
             self.point(x, y, 2)
+            points[id][3] = (x, y)
+
+            # connecting each dot to actually draw the object
+            point = (x, y)
+            p_id = (id + 1) * 3
+
+            i = points_index[p_id - 3]
+            self.connect(points[i][-1], points[i + 1][-1])
+            self.connect(points[i + 1][-1], point)
+            self.connect(point, points[i][-1])
 
 class Cube(Renderer):
     def __init__(self, Main, centre, dim, theta):
@@ -59,13 +71,30 @@ class Cube(Renderer):
         width2 = dim[0] / 2
         height2 = dim[1] / 2
         depth2 = dim[2] / 2
+
         points = [
+            # top left                      bottom left                 top right                    bottom right
             [-width2, -height2, -depth2], [-width2, height2, -depth2], [width2, -height2, -depth2], [width2, height2, -depth2],
             [-width2, -height2, depth2], [-width2, height2, depth2], [width2, -height2, depth2], [width2, height2, depth2]
         ]
+        points = [[*i, i] for i in points]
 
-        self.cube = [
-            points, theta, centre
+        points_index = [
+            0, 1, 2,  
+            1, 2, 3,
+
+            0, 4, 5,
+            0, 1, 5,
+
+            2, 6, 7,
+            3, 7, 6,
+
+            4, 5, 6,
+            5, 6, 7
+        ]
+
+        self.obj = [
+            points, theta, centre, points_index
         ]
 
         self.fov = 0
