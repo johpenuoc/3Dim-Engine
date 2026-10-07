@@ -20,8 +20,11 @@ class Main:
         self.clock = pygame.time.Clock()
         self.dt = 0
 
-        self.cube = render.Cube(
-            self, (0, 0, 20), (20, 20, 20), 0
+        #self.cube = render.Cube(
+        #    self, (0, 0, 20), (20, 20, 20), 0
+        #)
+        self.sphere = render.Sphere(
+            self, (0, 0, 20), 20, 0
         )
 
     def run(self):
@@ -35,7 +38,7 @@ class Main:
 
             self.dis.fill((0, 0, 0))
 
-            self.cube.draw()
+            self.sphere.draw()
 
             self.win.blit(
                 pygame.transform.scale(self.dis, WINDOWSIZE), (0, 0)

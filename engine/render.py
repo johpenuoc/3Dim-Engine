@@ -1,6 +1,6 @@
 import pygame
 import sys
-from math import cos, sin, sqrt, radians
+from math import cos, sin, tan, sqrt, radians
 
 # ensure parent folder is in the search path
 from pathlib import Path
@@ -38,7 +38,7 @@ class Renderer:
     def draw(self):
         #self.fov += .2 * self.main.dt
         self.obj[1] += (50 * self.main.dt) % 360
-        #self.fov += 2 * self.main.dt
+        self.fov += 5 * self.main.dt
         points = self.obj[0]
         centre = self.obj[2]
         points_index = self.obj[3]
@@ -58,14 +58,14 @@ class Renderer:
             points[id][-1] = (x, y)
 
         # connecting each dot to actually draw the object
-        for id, p_id in enumerate(points_index):
+        '''for id, p_id in enumerate(points_index):
             if (id + 1) % 3 == 0:
                 i1 = points_index[id - 1]
                 i2 = points_index[id - 2]
 
                 self.connect(points[p_id][-1], points[i1][-1])
                 self.connect(points[i1][-1], points[i2][-1])
-                self.connect(points[i2][-1], points[p_id][-1])
+                self.connect(points[i2][-1], points[p_id][-1])'''
 
 class Cube(Renderer):
     def __init__(self, Main, centre, dim, theta):
@@ -111,6 +111,40 @@ class Cube(Renderer):
 
         self.obj = [
             points, theta, centre, points_index
+        ]
+
+        self.fov = 0
+
+# a sphere will be generated
+class Sphere(Renderer):
+    def __init__(self, Main, centre, rad, theta):
+        Renderer.__init__(self, Main)
+
+        # generating the sphere's points
+        points = []
+        theta1 = 0
+        theta2 = 0
+
+        # generate top half first
+        inc = 90 / RES
+        for i in range(int(inc)):
+            _inc = 360 / RES
+            for j in range(int(_inc)):
+                theta1 += _inc
+
+                x = rad * cos(theta1)
+                z = rad * sin(theta1)
+
+                l = sqrt(x**2 + z**2)
+                y = l * tan(theta2)
+
+                points.append([x, y, z, [x, y, z]])
+
+            theta2 += inc
+            theta1 = 0
+
+        self.obj = [
+            points, theta, centre, []
         ]
 
         self.fov = 0
