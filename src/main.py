@@ -38,7 +38,7 @@ class Main:
 
             self.dis.fill((0, 0, 0))
 
-            self.sphere.draw()
+            self.sphere.draw_sphere()
 
             self.win.blit(
                 pygame.transform.scale(self.dis, WINDOWSIZE), (0, 0)

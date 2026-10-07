@@ -58,14 +58,53 @@ class Renderer:
             points[id][-1] = (x, y)
 
         # connecting each dot to actually draw the object
-        '''for id, p_id in enumerate(points_index):
+        for id, p_id in enumerate(points_index):
             if (id + 1) % 3 == 0:
                 i1 = points_index[id - 1]
                 i2 = points_index[id - 2]
 
                 self.connect(points[p_id][-1], points[i1][-1])
                 self.connect(points[i1][-1], points[i2][-1])
-                self.connect(points[i2][-1], points[p_id][-1])'''
+                self.connect(points[i2][-1], points[p_id][-1])
+
+    def draw_sphere(self):
+        #self.fov += .2 * self.main.dt
+        self.obj[1] += (50 * self.main.dt) % 360
+        self.fov += 3.5 * self.main.dt
+        points = self.obj[0]
+        centre = self.obj[2]
+        points_index = self.obj[3]
+
+        for l_id, layer in enumerate(points):
+            for id, p in enumerate(layer):
+                x, z = self.rotate(p[0], p[2], self.obj[1])
+                y = p[1]
+                
+                x += centre[0]
+                y += centre[1]
+                z += centre[2]
+
+                x, y = self.translate_Z(x, y, z)
+                x, y = self.translate_coord(x, y)
+
+                self.point(x, y, 2)
+                points[l_id][id][-1] = (x, y)
+
+        # connecting each dot to actually draw the object
+        for id, p_id in enumerate(points_index):
+            if (id + 1) % 3 == 0:
+                i1 = points_index[id - 1]
+                i2 = points_index[id - 2]
+
+                _id = p_id[0]
+                l_id = p_id[1]
+
+                p1 = points[l_id][_id][-1]
+                p2 = points[i1[1]][i1[0]][-1]
+                p3 = points[i2[1]][i2[0]][-1]
+                self.connect(p1, p2)
+                self.connect(p2, p3)
+                self.connect(p3, p1)
 
 class Cube(Renderer):
     def __init__(self, Main, centre, dim, theta):
@@ -129,6 +168,7 @@ class Sphere(Renderer):
         inc = 90 / SPHERE_RES
         _inc = 360 / inc
         for i in range(int(inc)):
+            points.append([])
             for j in range(int(inc)):
                 theta1 += _inc
 
@@ -143,7 +183,7 @@ class Sphere(Renderer):
                 l = sqrt(x**2 + z**2)
                 y = l * tan(radians(theta2))'''
 
-                points.append([x, y, z, [x, y, z]])
+                points[-1].append([x, y, z, [x, y, z]])
 
             theta2 += SPHERE_RES
             theta1 = 0
@@ -152,6 +192,7 @@ class Sphere(Renderer):
         theta1 = 0
         theta2 = 0
         for i in range(int(inc)):
+            points.insert(0, [])
             for j in range(int(inc)):
                 theta1 += _inc
 
@@ -166,7 +207,7 @@ class Sphere(Renderer):
                 l = sqrt(x**2 + z**2)
                 y = l * tan(radians(theta2))'''
 
-                points.append([x, y, z, [x, y, z]])
+                points[0].append([x, y, z, [x, y, z]])
 
             theta2 -= SPHERE_RES
             theta1 = 0
@@ -176,3 +217,30 @@ class Sphere(Renderer):
         ]
 
         self.fov = 0
+
+        self.triangulate()
+
+    def triangulate(self):
+        [
+            [
+                [0, 0, 0]
+            ]
+        ]
+        indexes = []
+        for l_id, layer in enumerate(self.obj[0]):
+            indexes.append([])
+            for id, p in enumerate(layer):
+
+                id_id = len(indexes) - 1
+                if l_id > 0 and len(indexes[id_id - 1]) > id:
+                    #id_id = len(indexes) - 1
+                    #print(len(indexes[id_id - 1]), id, len(indexes[id_id - 1]) > id)
+                    indexes[id_id - 1][id].append([id, l_id])
+
+                if id > 0:
+                    indexes[-1].append([[id - 1, l_id], [id, l_id]])
+
+        indexes = [k for i in indexes for j in i for k in j]
+
+        self.obj[3] = indexes
+                
