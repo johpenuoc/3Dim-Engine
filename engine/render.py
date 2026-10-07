@@ -69,8 +69,8 @@ class Renderer:
 
     def draw_sphere(self):
         #self.fov += .2 * self.main.dt
-        self.obj[1] += (50 * self.main.dt) % 360
-        self.fov += 3.5 * self.main.dt
+        self.obj[1] += (20 * self.main.dt) % 360
+        self.fov += 1 * self.main.dt
         points = self.obj[0]
         centre = self.obj[2]
         points_index = self.obj[3]
@@ -224,6 +224,10 @@ class Sphere(Renderer):
         [
             [
                 [0, 0, 0]
+            ],
+
+            [
+                [0, 0, 0]
             ]
         ]
         indexes = []
@@ -233,12 +237,15 @@ class Sphere(Renderer):
 
                 id_id = len(indexes) - 1
                 if l_id > 0 and len(indexes[id_id - 1]) > id:
-                    #id_id = len(indexes) - 1
-                    #print(len(indexes[id_id - 1]), id, len(indexes[id_id - 1]) > id)
                     indexes[id_id - 1][id].append([id, l_id])
 
                 if id > 0:
                     indexes[-1].append([[id - 1, l_id], [id, l_id]])
+
+            #if l_id >= len(self.obj[0]):
+            #    indexes[0][id].append([id, l_id])
+
+        print(indexes)
 
         indexes = [k for i in indexes for j in i for k in j]
 
