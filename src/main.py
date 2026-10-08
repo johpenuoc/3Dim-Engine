@@ -31,6 +31,8 @@ class Main:
         while 1:
             self.dt = self.clock.tick(FPS_CAP) / 1000
 
+            self.sphere.svertex_proc()
+
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
@@ -38,7 +40,7 @@ class Main:
 
             self.dis.fill((0, 0, 0))
 
-            self.sphere.draw_sphere()
+            self.sphere.srender()
 
             self.win.blit(
                 pygame.transform.scale(self.dis, WINDOWSIZE), (0, 0)
