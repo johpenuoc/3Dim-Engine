@@ -96,7 +96,7 @@ class Renderer:
 
     def triangle_area(self, p1, p2, p3):
         return abs((p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1])) / 2)
-    def shader(self, p1, p2, p3):
+    def shader(self, p1, p2, p3, recur):
         x_list = [p1[0], p2[0], p3[0]]
         y_list = [p1[1], p2[1], p3[1]]
         minx = min(x_list)
@@ -132,6 +132,16 @@ class Renderer:
                     )
                 else:
                     continue
+        # due to the rendering system, when i colour a triangle on the sphere
+        # i also have to colour another triangle to the side of it with the exact
+        # same dimensions, but flipped on the y-axis
+        # p.s. all of the triangles on the rendered sphere are all right-angle triangles,
+        # so this is easily done
+        if recur:
+            flipped_tri = (
+                p2, p3, (p3[0] + abs(p3[0] - p1[0]), p3[1])
+            )
+            self.shader(*flipped_tri, False)
 
 
     def srender(self):
@@ -156,7 +166,7 @@ class Renderer:
 
                 # only render the most front portion of the sphere
                 if z_avg < centre[2] / 2:
-                    self.shader(p1, p2, p3)
+                    self.shader(p1, p2, p3, True)
                     #self.connect(p1, p2)
                     #self.connect(p2, p3)
                     #self.connect(p3, p1)
@@ -278,7 +288,6 @@ class Sphere(Renderer):
                 if l_id > 0:
                     indexes[indexes_len - 1].append([[id - 1, l_id], [id, l_id], [id, l_id - 1]])
 
-        # weird bug lies in here
         for l_id, layer in enumerate(self.obj[0][int(middle):]):
             indexes.append([])
             indexes_len = len(indexes) - 1
