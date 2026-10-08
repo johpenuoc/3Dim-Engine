@@ -29,7 +29,7 @@ class Main:
         #    self, (0, 0, 20), (20, 20, 20), 0
         #)
         self.sphere = render.Sphere(
-            self, (0, 0, 23), 20, 0
+            self, (0, 0, 45), 40, 0
         )
 
     def run(self):

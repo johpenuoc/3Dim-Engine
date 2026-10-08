@@ -1,6 +1,8 @@
 import pygame
 import sys
-from math import cos, sin, tan, sqrt, radians
+from math import cos, sin, tan, radians, floor
+
+from random import randint
 
 # ensure parent folder is in the search path
 from pathlib import Path
@@ -9,8 +11,8 @@ parent_dir = str(Path(__file__).resolve().parent.parent)
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 
-from config.mst import *        
-    
+from config.mst import *
+
 class Renderer:
     def __init__(self, Main):
         self.main = Main
@@ -23,7 +25,7 @@ class Renderer:
 
     def translate_Z(self, x, y, z):
         return (x / (z + self.fov)) * RENDER_SCALE, (y / (z + self.fov)) * RENDER_SCALE
-        
+
     def rotate(self, x, z, theta):
         c = cos(radians(theta))
         s = sin(radians(theta))
@@ -41,12 +43,12 @@ class Renderer:
         #self.fov += 3.5 * self.main.dt
         points = self.obj[0]
         centre = self.obj[2]
-        points_index = self.obj[3]
+        #points_index = self.obj[3]
 
         for id, p in enumerate(points):
             x, z = self.rotate(p[0], p[2], self.obj[1])
             y = p[1]
-            
+
             x += centre[0]
             y += centre[1]
             z += centre[2]
@@ -67,7 +69,7 @@ class Renderer:
             for id, p in enumerate(layer):
                 x, z = self.rotate(p[0], p[2], self.obj[1])
                 y = p[1]
-                
+
                 x += centre[0]
                 y += centre[1]
                 z += centre[2]
@@ -77,7 +79,7 @@ class Renderer:
 
                 self.point(x, y, 2)
                 points[l_id][id][-1] = (x, y, z)
-        
+
     def render(self):
         points = self.obj[0]
         points_index = self.obj[3]
@@ -91,6 +93,46 @@ class Renderer:
                 self.connect(points[p_id][-1], points[i1][-1])
                 self.connect(points[i1][-1], points[i2][-1])
                 self.connect(points[i2][-1], points[p_id][-1])
+
+    def triangle_area(self, p1, p2, p3):
+        return abs((p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1])) / 2)
+    def shader(self, p1, p2, p3):
+        x_list = [p1[0], p2[0], p3[0]]
+        y_list = [p1[1], p2[1], p3[1]]
+        minx = min(x_list)
+        miny = min(y_list)
+        maxx = max(x_list)
+        maxy = max(y_list)
+        square_prem = (
+            abs(maxx - minx),
+            abs(maxy - miny)
+        )
+
+        # this determines what points within this square
+        # (that surrounds the triangle) are inside the
+        # triangle or not
+        colour = (
+            255, 0, 0
+        )
+        for x in range(int(square_prem[0])):
+            for y in range(int(square_prem[1])):
+                p = (minx + x, miny + y)
+
+                a1 = self.triangle_area(p1, p2, p3)
+                a2 = self.triangle_area(p, p1, p2)
+                a3 = self.triangle_area(p, p2, p3)
+                a4 = self.triangle_area(p, p1, p3)
+
+                if floor(a2 + a3 + a4) == floor(a1):
+                    _x, _y = self.translate_coord(p[0], p[1])
+                    _x -= DISPLAYSIZE[0] / 2
+                    _y -= DISPLAYSIZE[1] / 2
+                    pygame.draw.rect(
+                        self.main.dis, colour, (_x, _y, 1, 1)
+                    )
+                else:
+                    continue
+
 
     def srender(self):
         points = self.obj[0]
@@ -110,19 +152,16 @@ class Renderer:
                 p2 = points[i1[1]][i1[0]][-1]
                 p3 = points[i2[1]][i2[0]][-1]
 
-                z_avg = (p1[2] + p2[2] + p3[2]) / 3
+                z_avg = abs((p1[2] + p2[2] + p3[2]) / 3)
 
                 # only render the most front portion of the sphere
-                if z_avg < centre[2] / 3:
+                if z_avg < centre[2] / 2:
+                    #self.shader(p1, p2, p3)
                     self.connect(p1, p2)
                     self.connect(p2, p3)
                     self.connect(p3, p1)
                 else:
                     continue
-
-    def culling(self):
-        points = self.obj[0]
-        points_index = self.obj[3]
 
 class Cube(Renderer):
     def __init__(self, Main, centre, dim, theta):
@@ -183,7 +222,7 @@ class Sphere(Renderer):
         inc = 90 / SPHERE_RES
         _inc = 360 / inc
         points = []
-        
+
         # generate first half first
         theta1 = 0
         theta2 = 0
@@ -229,7 +268,7 @@ class Sphere(Renderer):
         self.obj.append(self.index_proc())
 
     def index_proc(self):
-        indexes = []                          
+        indexes = []
         for l_id, layer in enumerate(self.obj[0]):
             indexes.append([])
             indexes_len = len(indexes) - 1
@@ -240,4 +279,3 @@ class Sphere(Renderer):
 
         indexes = [k for i in indexes for j in i for k in j]
         return indexes
-                
