@@ -38,7 +38,7 @@ class Renderer:
     def draw(self):
         #self.fov += .2 * self.main.dt
         self.obj[1] += (50 * self.main.dt) % 360
-        self.fov += 3.5 * self.main.dt
+        #self.fov += 3.5 * self.main.dt
         points = self.obj[0]
         centre = self.obj[2]
         points_index = self.obj[3]
@@ -70,7 +70,7 @@ class Renderer:
     def draw_sphere(self):
         #self.fov += .2 * self.main.dt
         self.obj[1] += (20 * self.main.dt) % 360
-        self.fov += 1 * self.main.dt
+        #self.fov += 1 * self.main.dt
         points = self.obj[0]
         centre = self.obj[2]
         points_index = self.obj[3]
@@ -164,11 +164,14 @@ class Sphere(Renderer):
         theta1 = 0
         theta2 = 0
 
+        self.index = []
+
         # generate first half first
         inc = 90 / SPHERE_RES
         _inc = 360 / inc
         for i in range(int(inc)):
             points.append([])
+            self.index.append([])
             for j in range(int(inc)):
                 theta1 += _inc
 
@@ -184,6 +187,7 @@ class Sphere(Renderer):
                 y = l * tan(radians(theta2))'''
 
                 points[-1].append([x, y, z, [x, y, z]])
+                self.index[-1].append([j, i])
 
             theta2 += SPHERE_RES
             theta1 = 0
@@ -191,8 +195,11 @@ class Sphere(Renderer):
         # generate second half next
         theta1 = 0
         theta2 = 0
+        orig_len_points = len(points)
         for i in range(int(inc)):
-            points.insert(0, [])
+            #points.insert(0, [])
+            points.append([])
+            self.index.append([])
             for j in range(int(inc)):
                 theta1 += _inc
 
@@ -207,7 +214,8 @@ class Sphere(Renderer):
                 l = sqrt(x**2 + z**2)
                 y = l * tan(radians(theta2))'''
 
-                points[0].append([x, y, z, [x, y, z]])
+                points[-1].append([x, y, z, [x, y, z]])
+                self.index[-1].append([j, orig_len_points + i])
 
             theta2 -= SPHERE_RES
             theta1 = 0
@@ -231,23 +239,63 @@ class Sphere(Renderer):
             ]
         ]
         indexes = []
+        '''for l_id, layer in enumerate(self.obj[0]):
+            for id, _ in enumerate(layer):
+                indexes.append([id, l_id])
+                if id % 3 == 0 and l_id > 0:
+                    indexes.append([id - 1, l_id])
+                    indexes.append([id - 2, l_id])
+                    indexes.append([id - 2, l_id])'''
+                    #indexes.append([id - 3, (l_id + 1) % len(self.obj[0]) - 1])
+                        
+            
         for l_id, layer in enumerate(self.obj[0]):
             indexes.append([])
-            for id, p in enumerate(layer):
+            indexes_len = len(indexes) - 1
+            for id, _ in enumerate(layer):
 
-                id_id = len(indexes) - 1
-                if l_id > 0 and len(indexes[id_id - 1]) > id:
-                    indexes[id_id - 1][id].append([id, l_id])
+                if l_id > 0:
+                    indexes[indexes_len - 1].append([[id - 1, l_id], [id, l_id], [id, l_id - 1]])
+                #elif l_id < 1 and id > 0:
+                #    indexes[0].append([[id - 1, l_id], [id, l_id], [id, l_id]])
+                
 
-                if id > 0:
-                    indexes[-1].append([[id - 1, l_id], [id, l_id]])
+                #id_id = len(indexes) - 1
+                #if l_id > 0 and len(indexes[id_id - 1]) > id:
+                #    indexes[id_id - 1][id].append([id, l_id])
+
+                #if id > 0:
+                #    indexes[-1].append([[id - 1, l_id], [id, l_id]])
 
             #if l_id >= len(self.obj[0]):
             #    indexes[0][id].append([id, l_id])
 
-        print(indexes)
+        #print(indexes)
 
         indexes = [k for i in indexes for j in i for k in j]
+        #print(self.index)
+        sphere_mid = len(self.index) / 2
+        _index = []
+        for ll_id, layer in enumerate(self.index):
+            for p_id, p in enumerate(layer):
+                id = p[0]
+                l_id = p[1]
+
+                if p_id < len(layer) - 1 and (p_id + 1) % 2 != 0:
+                    next_p = layer[p_id + 1]
+                    if not (l_id >= len(self.index) - 1):
+                        point = [p, next_p, self.index[l_id + 1][next_p[0]]]
+                        _index.append(point)
+                    else:
+                        pass
+
+                '''if not (l_id >= len(self.index) - 1):
+                    if p_id < len(layer) - 1 and (p_id + 1) % 2 != 0:
+                        next_p = layer[p_id + 1]
+                        point = [p, next_p, self.index[l_id + 1][next_p[0]]]
+                        _index.append(point)'''
+        _index = [j for i in _index for j in i]
+        #print(_index)
 
         self.obj[3] = indexes
                 
