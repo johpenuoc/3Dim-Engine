@@ -76,7 +76,7 @@ class Renderer:
                 x, y = self.translate_coord(x, y)
 
                 self.point(x, y, 2)
-                points[l_id][id][-1] = (x, y)
+                points[l_id][id][-1] = (x, y, z)
         
     def render(self):
         points = self.obj[0]
@@ -94,6 +94,7 @@ class Renderer:
 
     def srender(self):
         points = self.obj[0]
+        centre = self.obj[2]
         points_index = self.obj[3]
 
         # connecting each dot to actually draw the object
@@ -108,9 +109,20 @@ class Renderer:
                 p1 = points[l_id][_id][-1]
                 p2 = points[i1[1]][i1[0]][-1]
                 p3 = points[i2[1]][i2[0]][-1]
-                self.connect(p1, p2)
-                self.connect(p2, p3)
-                self.connect(p3, p1)
+
+                z_avg = (p1[2] + p2[2] + p3[2]) / 3
+
+                # only render the most front portion of the sphere
+                if z_avg < centre[2] / 3:
+                    self.connect(p1, p2)
+                    self.connect(p2, p3)
+                    self.connect(p3, p1)
+                else:
+                    continue
+
+    def culling(self):
+        points = self.obj[0]
+        points_index = self.obj[3]
 
 class Cube(Renderer):
     def __init__(self, Main, centre, dim, theta):
@@ -165,6 +177,7 @@ class Sphere(Renderer):
         Renderer.__init__(self, Main)
 
         self.fov = 0
+        self.vertex_buf = []
 
         ###############################################################
         inc = 90 / SPHERE_RES

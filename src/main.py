@@ -13,12 +13,17 @@ if parent_dir not in sys.path:
 from config.mst import *
 import engine.render as render
 
+pygame.init()
+pygame.display.set_caption('Renderer')
+
 class Main:
     def __init__(self):
         self.win = pygame.display.set_mode(WINDOWSIZE)
         self.dis = pygame.Surface(DISPLAYSIZE)
         self.clock = pygame.time.Clock()
         self.dt = 0
+        self.fps = 0
+        self.fps_tick = 0
 
         #self.cube = render.Cube(
         #    self, (0, 0, 20), (20, 20, 20), 0
@@ -29,7 +34,15 @@ class Main:
 
     def run(self):
         while 1:
-            self.dt = self.clock.tick(FPS_CAP) / 1000
+            self.fps += 1
+            fps = self.clock.get_fps()
+            if self.fps >= fps:
+                self.fps_tick += 1
+                self.fps = 0
+            if self.fps_tick >= 1:
+                self.fps_tick = 0
+                print(int(fps))
+            self.dt = self.clock.tick(10_000) / 1000
 
             self.sphere.svertex_proc()
 
