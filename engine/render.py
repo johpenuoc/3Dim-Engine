@@ -156,10 +156,10 @@ class Renderer:
 
                 # only render the most front portion of the sphere
                 if z_avg < centre[2] / 2:
-                    #self.shader(p1, p2, p3)
-                    self.connect(p1, p2)
-                    self.connect(p2, p3)
-                    self.connect(p3, p1)
+                    self.shader(p1, p2, p3)
+                    #self.connect(p1, p2)
+                    #self.connect(p2, p3)
+                    #self.connect(p3, p1)
                 else:
                     continue
 
@@ -260,7 +260,7 @@ class Sphere(Renderer):
 
             theta2 -= SPHERE_RES
             theta1 = 0
-        ###############################################################
+        ##################################################################
 
         self.obj = [
             points, theta, centre
@@ -269,12 +269,24 @@ class Sphere(Renderer):
 
     def index_proc(self):
         indexes = []
-        for l_id, layer in enumerate(self.obj[0]):
+        middle = len(self.obj[0]) / 2
+        for l_id, layer in enumerate(self.obj[0][:int(middle)]):
             indexes.append([])
             indexes_len = len(indexes) - 1
-            for id, _ in enumerate(layer):
 
+            for id, _ in enumerate(layer):
                 if l_id > 0:
+                    indexes[indexes_len - 1].append([[id - 1, l_id], [id, l_id], [id, l_id - 1]])
+
+        # weird bug lies in here
+        for l_id, layer in enumerate(self.obj[0][int(middle):]):
+            indexes.append([])
+            indexes_len = len(indexes) - 1
+
+            l_id += int(middle)
+
+            for id, _ in enumerate(layer):
+                if l_id > 0 and l_id - 1 >= middle:
                     indexes[indexes_len - 1].append([[id - 1, l_id], [id, l_id], [id, l_id - 1]])
 
         indexes = [k for i in indexes for j in i for k in j]

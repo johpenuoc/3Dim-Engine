@@ -4,4 +4,4 @@ FPS_CAP = 60
 
 RENDER_SCALE = 50
 
-SPHERE_RES = 10 # 10 is 27 * 8 points
+SPHERE_RES = 5 # 10 is 27 * 8 points
