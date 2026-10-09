@@ -1,7 +1,6 @@
 import pygame
 import sys
 from math import cos, sin, tan, radians, floor
-
 from random import randint
 
 # ensure parent folder is in the search path
@@ -96,7 +95,7 @@ class Renderer:
 
     def triangle_area(self, p1, p2, p3):
         return abs((p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1])) / 2)
-    def shader(self, p1, p2, p3, recur):
+    def shader(self, p1, p2, p3):
         x_list = [p1[0], p2[0], p3[0]]
         y_list = [p1[1], p2[1], p3[1]]
         minx = min(x_list)
@@ -111,9 +110,13 @@ class Renderer:
         # this determines what points within this square
         # (that surrounds the triangle) are inside the
         # triangle or not
+        #c = randint(0, 255)
         colour = (
-            255, 0, 0
+            200, 0, 0
         )
+        dis = self.main.dis
+        disx2 = DISPLAYSIZE[0] / 2
+        disy2 = DISPLAYSIZE[1] / 2
         for x in range(int(square_prem[0])):
             for y in range(int(square_prem[1])):
                 p = (minx + x, miny + y)
@@ -123,26 +126,17 @@ class Renderer:
                 a3 = self.triangle_area(p, p2, p3)
                 a4 = self.triangle_area(p, p1, p3)
 
-                if floor(a2 + a3 + a4) == floor(a1):
+                if int(a2 + a3 + a4) == int(a1):
                     _x, _y = self.translate_coord(p[0], p[1])
-                    _x -= DISPLAYSIZE[0] / 2
-                    _y -= DISPLAYSIZE[1] / 2
-                    pygame.draw.rect(
-                        self.main.dis, colour, (_x, _y, 1, 1)
-                    )
+                    #pygame.draw.rect(
+                    #    dis, colour, (_x - disx2, _y - disy2, 1, 1)
+                    #)
+                    __x = int(_x - disx2)
+                    __y = (_y - disy2)
+                    dis.set_at((__x, __y), colour)
+                    continue
                 else:
                     continue
-        # due to the rendering system, when i colour a triangle on the sphere
-        # i also have to colour another triangle to the side of it with the exact
-        # same dimensions, but flipped on the y-axis
-        # p.s. all of the triangles on the rendered sphere are all right-angle triangles,
-        # so this is easily done
-        # the code below doesnt really work... only on the middle of the sphere
-        #if recur:
-        #    flipped_tri = (
-        #        p2, p3, (p3[0] + abs(p3[0] - p1[0]), p3[1])
-        #    )
-        #    self.shader(*flipped_tri, False)
 
 
     def srender(self):
@@ -150,29 +144,36 @@ class Renderer:
         centre = self.obj[2]
         points_index = self.obj[3]
 
+        #pixel_array = pygame.surfarray.pixels3d(self.main.dis)
+
         # connecting each dot to actually draw the object
-        for id, p_id in enumerate(points_index):
-            if (id + 1) % 3 == 0:
-                i1 = points_index[id - 1]
-                i2 = points_index[id - 2]
+        id = 3
+        for _ in range(int(len(points_index) / 3)):
+            #print('id', id)
+            p_id = points_index[id - 1]
+            i1 = points_index[id - 2]
+            i2 = points_index[id - 3]
 
-                _id = p_id[0]
-                l_id = p_id[1]
+            _id = p_id[0]
+            l_id = p_id[1]
 
-                p1 = points[l_id][_id][-1]
-                p2 = points[i1[1]][i1[0]][-1]
-                p3 = points[i2[1]][i2[0]][-1]
+            p1 = points[l_id][_id][-1]
+            p2 = points[i1[1]][i1[0]][-1]
+            p3 = points[i2[1]][i2[0]][-1]
 
-                z_avg = abs((p1[2] + p2[2] + p3[2]) / 3)
+            z_avg = abs((p1[2] + p2[2] + p3[2]) / 3)
 
-                # only render the most front portion of the sphere
-                if z_avg < centre[2] / 2:
-                    self.shader(p1, p2, p3, True)
-                    #self.connect(p1, p2)
-                    #self.connect(p2, p3)
-                    #self.connect(p3, p1)
-                else:
-                    continue
+            # only render the most front portion of the sphere
+            if z_avg < centre[2] / 4:
+                #self.shader(p1, p2, p3)
+                self.connect(p1, p2)
+                self.connect(p2, p3)
+                self.connect(p3, p1)
+                id += 3
+                continue
+            else:
+                id += 3
+                continue
 
 class Cube(Renderer):
     def __init__(self, Main, centre, dim, theta):

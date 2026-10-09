@@ -1,3 +1,6 @@
+import os
+os.environ['PYGAME_BLEND_ALPHA_SDL2'] = '1'
+
 import pygame
 import sys
 from pygame.locals import *
@@ -18,7 +21,7 @@ pygame.display.set_caption('Renderer')
 
 class Main:
     def __init__(self):
-        self.win = pygame.display.set_mode(WINDOWSIZE)
+        self.win = pygame.display.set_mode(WINDOWSIZE) # pygame.FULLSCREEN | pygame.SCALED
         self.dis = pygame.Surface(DISPLAYSIZE)
         self.clock = pygame.time.Clock()
         self.dt = 0
