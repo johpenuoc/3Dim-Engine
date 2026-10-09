@@ -95,7 +95,7 @@ class Renderer:
 
     def triangle_area(self, p1, p2, p3):
         return abs((p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1])) / 2)
-    def shader(self, p1, p2, p3):
+    def shader(self, p1, p2, p3, recur):
         x_list = [p1[0], p2[0], p3[0]]
         y_list = [p1[1], p2[1], p3[1]]
         minx = min(x_list)
@@ -110,13 +110,9 @@ class Renderer:
         # this determines what points within this square
         # (that surrounds the triangle) are inside the
         # triangle or not
-        #c = randint(0, 255)
         colour = (
-            200, 0, 0
+            255, 0, 0
         )
-        dis = self.main.dis
-        disx2 = DISPLAYSIZE[0] / 2
-        disy2 = DISPLAYSIZE[1] / 2
         for x in range(int(square_prem[0])):
             for y in range(int(square_prem[1])):
                 p = (minx + x, miny + y)
@@ -126,17 +122,26 @@ class Renderer:
                 a3 = self.triangle_area(p, p2, p3)
                 a4 = self.triangle_area(p, p1, p3)
 
-                if int(a2 + a3 + a4) == int(a1):
+                if floor(a2 + a3 + a4) == floor(a1):
                     _x, _y = self.translate_coord(p[0], p[1])
-                    #pygame.draw.rect(
-                    #    dis, colour, (_x - disx2, _y - disy2, 1, 1)
-                    #)
-                    __x = int(_x - disx2)
-                    __y = (_y - disy2)
-                    dis.set_at((__x, __y), colour)
-                    continue
+                    _x -= DISPLAYSIZE[0] / 2
+                    _y -= DISPLAYSIZE[1] / 2
+                    pygame.draw.rect(
+                        self.main.dis, colour, (_x, _y, 1, 1)
+                    )
                 else:
                     continue
+        # due to the rendering system, when i colour a triangle on the sphere
+        # i also have to colour another triangle to the side of it with the exact
+        # same dimensions, but flipped on the y-axis
+        # p.s. all of the triangles on the rendered sphere are all right-angle triangles,
+        # so this is easily done
+        # the code below doesnt really work... only on the middle of the sphere
+        #if recur:
+        #    flipped_tri = (
+        #        p2, p3, (p3[0] + abs(p3[0] - p1[0]), p3[1])
+        #    )
+        #    self.shader(*flipped_tri, False)
 
 
     def srender(self):
@@ -144,36 +149,29 @@ class Renderer:
         centre = self.obj[2]
         points_index = self.obj[3]
 
-        #pixel_array = pygame.surfarray.pixels3d(self.main.dis)
-
         # connecting each dot to actually draw the object
-        id = 3
-        for _ in range(int(len(points_index) / 3)):
-            #print('id', id)
-            p_id = points_index[id - 1]
-            i1 = points_index[id - 2]
-            i2 = points_index[id - 3]
+        for id, p_id in enumerate(points_index):
+            if (id + 1) % 3 == 0:
+                i1 = points_index[id - 1]
+                i2 = points_index[id - 2]
 
-            _id = p_id[0]
-            l_id = p_id[1]
+                _id = p_id[0]
+                l_id = p_id[1]
 
-            p1 = points[l_id][_id][-1]
-            p2 = points[i1[1]][i1[0]][-1]
-            p3 = points[i2[1]][i2[0]][-1]
+                p1 = points[l_id][_id][-1]
+                p2 = points[i1[1]][i1[0]][-1]
+                p3 = points[i2[1]][i2[0]][-1]
 
-            z_avg = abs((p1[2] + p2[2] + p3[2]) / 3)
+                z_avg = abs((p1[2] + p2[2] + p3[2]) / 3)
 
-            # only render the most front portion of the sphere
-            if z_avg < centre[2] / 4:
-                #self.shader(p1, p2, p3)
-                self.connect(p1, p2)
-                self.connect(p2, p3)
-                self.connect(p3, p1)
-                id += 3
-                continue
-            else:
-                id += 3
-                continue
+                # only render the most front portion of the sphere
+                if z_avg < centre[2] / 4:
+                    #self.shader(p1, p2, p3, True)
+                    self.connect(p1, p2)
+                    self.connect(p2, p3)
+                    self.connect(p3, p1)
+                else:
+                    continue
 
 class Cube(Renderer):
     def __init__(self, Main, centre, dim, theta):
@@ -238,7 +236,8 @@ class Sphere(Renderer):
         # generate first half first
         theta1 = 0
         theta2 = 0
-        for _ in range(int(inc)):
+        buf = []
+        for i in range(int(inc)):
 
             points.append([])
             for _ in range(int(inc)):
@@ -250,14 +249,25 @@ class Sphere(Renderer):
                 z = l * tan(radians(theta2))
 
                 points[-1].append([x, y, z, [x, y, z]])
+                if i >= int(inc) - 1:
+                    buf.append([x, y, z])
 
             theta2 += SPHERE_RES
             theta1 = 0
 
+        # this code just adds a point where theres a hole in the sphere
+        avg = [
+            sum([i[0] for i in buf]) / len(buf),
+            sum([i[1] for i in buf]) / len(buf),
+            sum([i[2] for i in buf]) / len(buf)
+        ]
+        points.append([[*avg, avg]])
+
         # generate second half next
         theta1 = 0
         theta2 = 0
-        for _ in range(int(inc)):
+        buf = []
+        for i in range(int(inc)):
 
             points.append([])
             for _ in range(int(inc)):
@@ -269,19 +279,23 @@ class Sphere(Renderer):
                 z = l * tan(radians(theta2))
 
                 points[-1].append([x, y, z, [x, y, z]])
+                if i >= int(inc) - 1:
+                    buf.append([x, y, z])
 
             theta2 -= SPHERE_RES
             theta1 = 0
         ##################################################################
+        avg = [
+            sum([i[0] for i in buf]) / len(buf),
+            sum([i[1] for i in buf]) / len(buf),
+            sum([i[2] for i in buf]) / len(buf)
+        ]
+        points.append([[*avg, avg]])
 
         self.obj = [
             points, theta, centre
         ]
         self.obj.append(self.index_proc())
-        #print('Removing redundant sides...')
-        #self.elim_redunants()
-        #print('Completed removing redundant sides.')
-        #print(self.obj[3])
 
     def index_proc(self):
         indexes = []
@@ -307,34 +321,20 @@ class Sphere(Renderer):
                     indexes[indexes_len - 1].append([[id - 1, l_id], [id, l_id], [id, l_id - 1]])
                     indexes[indexes_len - 1].append([[id, l_id - 1], [id - 1, l_id - 1], [id - 1, l_id]])
 
+        # there's two verticies: one at each end which 'close' the sphere
+        # the code below is just to connect those two end verticies to the surrounding
+        # verticies on the layer below
+        endp1 = (len(self.obj[0]) - 1) / 2
+        endp2 = len(self.obj[0]) - 1
+        # this is the layer below the end verticie
+        for id, layer in enumerate(self.obj[0][int(endp1 - 1)]):
+            if id > 0:
+                indexes[-1].append([[id - 1, int(endp1 - 1)], [id, int(endp1 - 1)], [0, int(endp1)]])
+
+        for id, layer in enumerate(self.obj[0][int(endp2 - 1)]):
+            if id > 0:
+                print(id)
+                indexes[-1].append([[id - 1, int(endp2 - 1)], [id, int(endp2 - 1)], [0, int(endp2)]])
+
         indexes = [k for i in indexes for j in i for k in j]
         return indexes
-
-    # this should remove any lines that overlap and are, hence, 'redundant'
-    def elim_redunants(self):
-        obj3_len = len(self.obj) - 1
-        for id, p1 in enumerate(self.obj[3]):
-            for id2, p2 in enumerate(self.obj[3]):
-                if id != id2 and id < obj3_len and id2 < obj3_len:
-                    if p2[0] == p1[0] and self.obj[3][id2 + 1] == self.obj[3][id + 1]:
-                        self.obj[3][id][0] = -self.obj[3][id][0]
-                        self.obj[3][id + 1][0] = -self.obj[3][id + 1][0]
-
-                    '''buf.append(id)
-
-                    if (id + 1) % 6 == 0:
-                        b1 = (buf[0] == buf[3])
-                        b2 = (buf[1] == buf[4])
-                        b3 = (buf[2] == buf[5])
-
-                        if b1 and b2:
-                            self.obj[0][id - 2] = -self.obj[0][id - 2]
-                            self.obj[0][id - 1] = -self.obj[0][id - 1]
-                        elif b2 and b3:
-                            self.obj[0][id - 1] = -self.obj[0][id - 1]
-                            self.obj[0][id] = -self.obj[0][id]
-                        elif b3 and b1:
-                            self.obj[0][id] = -self.obj[0][id]
-                            self.obj[0][id - 2] = -self.obj[0][id - 2]
-
-                        buf = []'''
