@@ -278,6 +278,10 @@ class Sphere(Renderer):
             points, theta, centre
         ]
         self.obj.append(self.index_proc())
+        #print('Removing redundant sides...')
+        #self.elim_redunants()
+        #print('Completed removing redundant sides.')
+        #print(self.obj[3])
 
     def index_proc(self):
         indexes = []
@@ -305,3 +309,32 @@ class Sphere(Renderer):
 
         indexes = [k for i in indexes for j in i for k in j]
         return indexes
+
+    # this should remove any lines that overlap and are, hence, 'redundant'
+    def elim_redunants(self):
+        obj3_len = len(self.obj) - 1
+        for id, p1 in enumerate(self.obj[3]):
+            for id2, p2 in enumerate(self.obj[3]):
+                if id != id2 and id < obj3_len and id2 < obj3_len:
+                    if p2[0] == p1[0] and self.obj[3][id2 + 1] == self.obj[3][id + 1]:
+                        self.obj[3][id][0] = -self.obj[3][id][0]
+                        self.obj[3][id + 1][0] = -self.obj[3][id + 1][0]
+
+                    '''buf.append(id)
+
+                    if (id + 1) % 6 == 0:
+                        b1 = (buf[0] == buf[3])
+                        b2 = (buf[1] == buf[4])
+                        b3 = (buf[2] == buf[5])
+
+                        if b1 and b2:
+                            self.obj[0][id - 2] = -self.obj[0][id - 2]
+                            self.obj[0][id - 1] = -self.obj[0][id - 1]
+                        elif b2 and b3:
+                            self.obj[0][id - 1] = -self.obj[0][id - 1]
+                            self.obj[0][id] = -self.obj[0][id]
+                        elif b3 and b1:
+                            self.obj[0][id] = -self.obj[0][id]
+                            self.obj[0][id - 2] = -self.obj[0][id - 2]
+
+                        buf = []'''

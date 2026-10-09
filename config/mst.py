@@ -1,7 +1,7 @@
-WINDOWSIZE = (16 * 35, 9 * 35)
-DISPLAYSIZE = (16 * 20, 9 * 20)
+WINDOWSIZE = (16 * 55, 9 * 55)
+DISPLAYSIZE = (16 * 15, 9 * 15)
 FPS_CAP = 60
 
-RENDER_SCALE = 50
+RENDER_SCALE = 30
 
-SPHERE_RES = 1.5 # 10 is 27 * 8 points
+SPHERE_RES = 2 # 10 is 27 * 8 points
