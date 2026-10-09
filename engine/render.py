@@ -1,6 +1,6 @@
 import pygame
 import sys
-from math import cos, sin, tan, radians, floor
+from math import cos, sin, tan, radians, pi
 from random import randint
 
 # ensure parent folder is in the search path
@@ -95,7 +95,7 @@ class Renderer:
 
     def triangle_area(self, p1, p2, p3):
         return abs((p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1])) / 2)
-    def shader(self, p1, p2, p3, recur):
+    def shader(self, p1, p2, p3):
         x_list = [p1[0], p2[0], p3[0]]
         y_list = [p1[1], p2[1], p3[1]]
         minx = min(x_list)
@@ -122,26 +122,17 @@ class Renderer:
                 a3 = self.triangle_area(p, p2, p3)
                 a4 = self.triangle_area(p, p1, p3)
 
-                if floor(a2 + a3 + a4) == floor(a1):
+                if int(a2 + a3 + a4) == int(a1):
                     _x, _y = self.translate_coord(p[0], p[1])
                     _x -= DISPLAYSIZE[0] / 2
                     _y -= DISPLAYSIZE[1] / 2
-                    pygame.draw.rect(
-                        self.main.dis, colour, (_x, _y, 1, 1)
-                    )
+                    self.main.dis.set_at((_x, _y), (255, 0, 0))
+                    #pygame.draw.rect(
+                    #    self.main.dis, colour, (_x, _y, 1, 1)
+                    #)
+
                 else:
                     continue
-        # due to the rendering system, when i colour a triangle on the sphere
-        # i also have to colour another triangle to the side of it with the exact
-        # same dimensions, but flipped on the y-axis
-        # p.s. all of the triangles on the rendered sphere are all right-angle triangles,
-        # so this is easily done
-        # the code below doesnt really work... only on the middle of the sphere
-        #if recur:
-        #    flipped_tri = (
-        #        p2, p3, (p3[0] + abs(p3[0] - p1[0]), p3[1])
-        #    )
-        #    self.shader(*flipped_tri, False)
 
 
     def srender(self):
@@ -166,9 +157,9 @@ class Renderer:
 
                 # only render the most front portion of the sphere
                 if z_avg < centre[2] / 4:
-                    #self.shader(p1, p2, p3, True)
-                    self.connect(p1, p2)
-                    self.connect(p2, p3)
+                    #self.shader(p1, p2, p3)
+                    #self.connect(p1, p2)
+                    #self.connect(p2, p3)
                     self.connect(p3, p1)
                 else:
                     continue
@@ -226,7 +217,7 @@ class Sphere(Renderer):
         Renderer.__init__(self, Main)
 
         self.fov = 0
-        self.vertex_buf = []
+        self.rad = rad
 
         ###############################################################
         inc = 90 / SPHERE_RES
@@ -296,6 +287,40 @@ class Sphere(Renderer):
             points, theta, centre
         ]
         self.obj.append(self.index_proc())
+
+        # projecting an image onto the sphere
+        total_sphere_res = int(self.sphere_res() / WD_DIF)
+        side_res = total_sphere_res / (self.rad * 2)
+        rect_dim = (side_res, side_res * 2)
+
+        self.earth_img = pygame.transform.scale(pygame.image.load('data/earth.jpg').convert(), rect_dim)
+
+        # im mapping each pixel of the sphere to a value which will correspond to the value on the earth_img
+        '''theta1 = 0
+        theta2 = 90
+        inc_anglex = 360 / rect_dim[0]
+        inc_angley = 180 / rect_dim[1]
+        theta1 = 0
+        theta2 = 0
+        img_data = {}
+        for _ in range(int(rect_dim[0])):
+            theta1 += inc_anglex
+
+            for _ in range(int(rect_dim[1])):
+
+                l = rad * cos(radians(theta2))
+                x = l * sin(radians(theta1))
+                y = l * cos(radians(theta1))
+                z = l * tan(radians(theta2))
+
+                theta2 += inc_angley
+
+            theta2 = 0'''
+
+
+
+    def sphere_res(self):
+        return 4 * pi * (self.rad**2)
 
     def index_proc(self):
         indexes = []
