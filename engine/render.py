@@ -137,11 +137,12 @@ class Renderer:
         # same dimensions, but flipped on the y-axis
         # p.s. all of the triangles on the rendered sphere are all right-angle triangles,
         # so this is easily done
-        if recur:
-            flipped_tri = (
-                p2, p3, (p3[0] + abs(p3[0] - p1[0]), p3[1])
-            )
-            self.shader(*flipped_tri, False)
+        # the code below doesnt really work... only on the middle of the sphere
+        #if recur:
+        #    flipped_tri = (
+        #        p2, p3, (p3[0] + abs(p3[0] - p1[0]), p3[1])
+        #    )
+        #    self.shader(*flipped_tri, False)
 
 
     def srender(self):
@@ -287,6 +288,8 @@ class Sphere(Renderer):
             for id, _ in enumerate(layer):
                 if l_id > 0:
                     indexes[indexes_len - 1].append([[id - 1, l_id], [id, l_id], [id, l_id - 1]])
+                    indexes[indexes_len - 1].append([[id, l_id - 1], [id - 1, l_id - 1], [id - 1, l_id]])
+
 
         for l_id, layer in enumerate(self.obj[0][int(middle):]):
             indexes.append([])
@@ -297,6 +300,7 @@ class Sphere(Renderer):
             for id, _ in enumerate(layer):
                 if l_id > 0 and l_id - 1 >= middle:
                     indexes[indexes_len - 1].append([[id - 1, l_id], [id, l_id], [id, l_id - 1]])
+                    indexes[indexes_len - 1].append([[id, l_id - 1], [id - 1, l_id - 1], [id - 1, l_id]])
 
         indexes = [k for i in indexes for j in i for k in j]
         return indexes
